@@ -1,0 +1,66 @@
+version: '3.5'
+services:
+
+  # PHP Service
+  app:
+    container_name: ${ENV}_${NAME}_app
+    image: example/example:backend-${ENV}
+    restart: always
+    volumes:
+      - ./docker/storage/app:/var/www/storage/app
+      - ./docker/storage/logs:/var/www/storage/logs
+      #- ./uploads:/var/www/public/uploads
+      - ./.env:/var/www/.env
+      - ./docker/storage/app/public/images:/var/www/public/images/
+    depends_on:
+      - mysql
+    networks:
+      - default
+
+  # Nginx Service
+  nginx:
+    container_name: ${ENV}_${NAME}_nginx
+    image: example/example:frontend-${ENV}
+    restart: always
+    volumes:
+      #- ./storage/app/public:/var/www/public/public
+      - ./docker/storage/app/public/:/var/www/public/storage/
+      - ./docker/storage/app/uploads/:/var/www/public/eluploads/
+      - ./docker/storage/app/public/images:/var/www/public/images/
+    networks:
+      - default
+      - proxynet
+
+  # MySQL Service
+  mysql:
+    container_name: ${ENV}_${NAME}_mysql
+    image: mariadb
+    restart: always
+    ports:
+      - "10.0.30.163:30000:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: $DB_PASSWORD
+      MYSQL_DATABASE: $DB_DATABASE
+      MYSQL_USER: $DB_USERNAME
+      MYSQL_PASSWORD: $DB_PASSWORD
+    volumes:
+      - ./docker/mysql/data:/var/lib/mysql/
+
+  # PHPMyAdmin
+  phpmyadmin:
+    container_name: ${ENV}_${NAME}_phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - UPLOAD_LIMIT=300M
+      - PMA_PORT=3306
+      - PMA_HOST=mysql
+    depends_on:
+      - mysql
+    networks:
+      - default
+      - proxynet
+
+networks:
+  proxynet:
+    name: proxy_network
+

@@ -1,0 +1,25 @@
+version: '3.5'
+
+services:
+  proxy:
+    container_name: proxy
+    hostname: proxy
+    image: example/nginx:base
+    sysctls:
+      - net.ipv4.tcp_timestamps=0
+    ports:
+      - 80:80
+      - 443:443
+     # - 5665:5665
+    volumes:
+      - ./config/:/etc/nginx/conf.d
+      - ./certs:/certs
+      - ./.well-known/:/var/www/
+      - ./include/:/etc/nginx/include
+    networks:
+      - proxynet
+
+networks:
+  proxynet:
+    name: proxy_network
+
